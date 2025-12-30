@@ -20,34 +20,6 @@ echo [2/8] Repository check...
 echo     Running inside repository. [OK]
 
 
-REM ---- 3. DOWNLOAD WEIGHTS ----
-echo.
-echo [3/8] Checking Weights...
-
-if exist "pretrained_weights\insightface" (
-    echo     [Skipping] Weights already present.
-) else (
-    echo     Installing gdown...
-    call pip install gdown >nul 2>&1
-
-    echo     Downloading pretrained weights...
-    if exist "weights_temp" rmdir /S /Q "weights_temp"
-
-    call gdown --folder https://drive.google.com/drive/folders/1UtKgzKjFAOmZkhNK-OYT0caJ_w2XAnib -O weights_temp
-    if %ERRORLEVEL% NEQ 0 (
-        echo [ERROR] Failed downloading weights!
-        pause
-        exit /b
-    )
-
-    echo     Organizing directory structure...
-    if not exist "pretrained_weights" mkdir pretrained_weights
-    xcopy "weights_temp\*" "pretrained_weights\" /E /I /Y >nul
-
-    echo     Cleaning up temp files...
-    rmdir /S /Q weights_temp
-    echo     Weights successfully organized.
-)
 
 
 REM ---- 4. CHECK/INSTALL CONDA ----
@@ -81,6 +53,35 @@ if %errorlevel% equ 0 (
     echo     Creating environment: final_test...
     call conda create -y -n final_test python=3.10
     call conda activate final_test
+)
+
+REM ---- 3. DOWNLOAD WEIGHTS ----
+echo.
+echo [3/8] Checking Weights...
+
+if exist "pretrained_weights\insightface" (
+    echo     [Skipping] Weights already present.
+) else (
+    echo     Installing gdown...
+    call pip install gdown >nul 2>&1
+
+    echo     Downloading pretrained weights...
+    if exist "weights_temp" rmdir /S /Q "weights_temp"
+
+    call gdown --folder https://drive.google.com/drive/folders/1UtKgzKjFAOmZkhNK-OYT0caJ_w2XAnib -O weights_temp
+    if %ERRORLEVEL% NEQ 0 (
+        echo [ERROR] Failed downloading weights!
+        pause
+        exit /b
+    )
+
+    echo     Organizing directory structure...
+    if not exist "pretrained_weights" mkdir pretrained_weights
+    xcopy "weights_temp\*" "pretrained_weights\" /E /I /Y >nul
+
+    echo     Cleaning up temp files...
+    rmdir /S /Q weights_temp
+    echo     Weights successfully organized.
 )
 
 
