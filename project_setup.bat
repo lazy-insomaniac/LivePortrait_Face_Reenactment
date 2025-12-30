@@ -19,7 +19,8 @@ echo.
 echo [2/8] Repository check...
 echo     Running inside repository. [OK]
 
-REM ---- 3. DOWNLOAD WEIGHTS (FIXED STRUCTURE) ----
+
+REM ---- 3. DOWNLOAD WEIGHTS ----
 echo.
 echo [3/8] Checking Weights...
 
@@ -27,24 +28,27 @@ if exist "pretrained_weights\insightface" (
     echo     [Skipping] Weights already present.
 ) else (
     echo     Installing gdown...
-    pip install gdown >nul 2>&1
+    call pip install gdown >nul 2>&1
 
     echo     Downloading pretrained weights...
     if exist "weights_temp" rmdir /S /Q "weights_temp"
-    
-    REM Download into a temp folder first
-    gdown --folder https://drive.google.com/drive/folders/1UtKgzKjFAOmZkhNK-OYT0caJ_w2XAnib -O weights_temp
+
+    call gdown --folder https://drive.google.com/drive/folders/1UtKgzKjFAOmZkhNK-OYT0caJ_w2XAnib -O weights_temp
+    if %ERRORLEVEL% NEQ 0 (
+        echo [ERROR] Failed downloading weights!
+        pause
+        exit /b
+    )
 
     echo     Organizing directory structure...
     if not exist "pretrained_weights" mkdir pretrained_weights
-
-    REM Copy CONTENTS of temp into pretrained_weights
     xcopy "weights_temp\*" "pretrained_weights\" /E /I /Y >nul
 
     echo     Cleaning up temp files...
     rmdir /S /Q weights_temp
     echo     Weights successfully organized.
 )
+
 
 REM ---- 4. CHECK/INSTALL CONDA ----
 echo.
@@ -65,44 +69,53 @@ IF %ERRORLEVEL% NEQ 0 (
     echo     Conda is installed.
 )
 
-REM ---- 5. CREATE ENVIRONMENT ----
+
+REM ---- 5. CREATE / ACTIVATE ENV ----
 echo.
 echo [5/8] Checking Environment...
-conda env list | find "final_setup" >nul
+conda env list | find "final_test" >nul
 if %errorlevel% equ 0 (
-    echo     [Skipping] Environment 'final_setup' already exists.
-    call conda activate final_setup
+    echo     Environment 'final_test' exists. Activating...
+    call conda activate final_test
 ) else (
-    echo     Creating environment: final_setup...
-    call conda create -y -n final_setup python=3.10
-    call conda activate final_setup
+    echo     Creating environment: final_test...
+    call conda create -y -n final_test python=3.10
+    call conda activate final_test
 )
+
 
 REM ---- 6-8. INSTALL DEPENDENCIES ----
 echo.
-echo [6-8/8] Checking Dependencies...
+echo [6-8/8] Installing Dependencies...
 
-if exist "install_complete.flag" (
-    echo     [Skipping] Dependencies already installed.
-) else (
-    echo     1. Installing PyTorch (CUDA 12.1)...
-    pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121
-    
-    echo     2. Installing ffmpeg...
-    call conda install -y -c conda-forge ffmpeg
-    
-    echo     3. Installing pip requirements...
-    pip install -r requirements.txt
-    
-    REM Create a flag file so we don't run this next time
-    echo done > install_complete.flag
-    echo     Dependencies installed.
+echo     1. Installing PyTorch (CUDA 12.1)...
+call pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Failed installing PyTorch. Check CUDA drivers or use CPU version!
+    pause
+    exit /b
 )
+
+echo     2. Installing FFmpeg...
+call conda install -y -c conda-forge ffmpeg
+if %ERRORLEVEL% NEQ 0 (
+    echo [WARNING] Conda FFmpeg failed, trying pip fallback...
+    call pip install imageio-ffmpeg
+)
+
+echo     3. Installing Python requirements...
+call pip install -r requirements.txt
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Some dependencies failed! Check requirements.txt.
+    pause
+    exit /b
+)
+
 
 REM ---- 9. LAUNCH ----
 echo.
 echo ==============================================
-echo 🎉 SETUP COMPLETE! Starting Application...
+echo 🎉 SETUP COMPLETE! Launching LivePortrait...
 echo ==============================================
-streamlit run gui.py
+call streamlit run gui.py
 pause
