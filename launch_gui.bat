@@ -23,11 +23,11 @@ IF %ERRORLEVEL% NEQ 0 (
 
 REM ---- ACTIVATE ENVIRONMENT ----
 echo.
-echo Activating environment: final_test...
-call conda activate final_test
+echo Activating environment: test_drive...
+call conda activate test_drive
 
 if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Failed to activate environment 'final_test'.
+    echo [ERROR] Failed to activate environment 'test_drive'.
     echo Make sure it exists: conda env list
     pause
     exit /b
